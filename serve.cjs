@@ -4,7 +4,7 @@ const path = require('node:path');
 const {analyze, validateImages, toFeatures} = require('./analysis.cjs');
 const Crochet = require('./pattern.js');
 if (fs.existsSync(path.join(__dirname,'.env'))) process.loadEnvFile(path.join(__dirname,'.env'));
-const files = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/pattern.js':'pattern.js','/style.css':'style.css'};
+const files = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/pattern.js':'pattern.js','/palette.js':'palette.js','/style.css':'style.css'};
 const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};
 function createServer({apiKey=process.env.GEMINI_API_KEY,freeTierConfirmed=process.env.GEMINI_FREE_TIER_CONFIRMED==='yes',model='gemini-3.5-flash-lite',analyzeImpl=analyze}={}) {
   let busy=false,calls=0;

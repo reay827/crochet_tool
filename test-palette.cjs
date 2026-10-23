@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict');
+const Palette=require('./palette.js');
+const palette=Palette.create({body:'#FFFFFF',accent:'#739ac5',headPatch:true,headColor:'#739AC5'});
+assert.equal(palette.entries.length,2);
+assert.equal(palette.label('#ffffff'),'A · 흰색');
+assert.equal(palette.label('#739ac5'),'B · 하늘색');
+assert.equal(palette.label('#739AC5'),palette.label('#739ac5'));
+assert.deepEqual(palette.entries[1].roles,['귀·꼬리','머리 위']);
+const one=Palette.create({body:'#FFFFFF',accent:'#ffffff',headPatch:false});assert.equal(one.entries.length,1);
+const distinct=Palette.create({body:'#FFFFFF',accent:'#739AC5',headPatch:true,headColor:'#000000'});assert.equal(distinct.entries.length,3);
+const near=Palette.create({body:'#FFFFFF',accent:'#739AC5',headPatch:true,headColor:'#79A0C0'});assert.equal(near.entries.length,2);assert.equal(near.color('#79a0c0'),'#739AC5');
+const white=Palette.create({body:'#FFFFFF',accent:'#f8f8f8',headPatch:false});assert.equal(white.entries.length,1);
+assert.throws(()=>Palette.create({body:'bad',accent:'#739ac5'}));
+console.log('PASS: consistent white/sky-blue labels, case-insensitive color deduplication, distinct colors preserved.');
