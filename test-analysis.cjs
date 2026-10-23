@@ -15,6 +15,7 @@ async function main(){
   assert.equal(toFeatures({...a,tail:'unknown'}).tail,false);
   assert.throws(()=>toFeatures({...a,body:'<script>'}));
   assert.throws(()=>toFeatures({...a,ear:'unknown'}));
+  await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>{throw new TypeError('fetch failed');}}),/네트워크 접근 권한/);
   await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>({ok:false,status:429})}),/무료/);
   await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>({ok:true,json:async()=>({candidates:[{finishReason:'SAFETY'}]})})}),/끝내지/);
   let calls=0;
