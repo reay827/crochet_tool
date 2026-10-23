@@ -4,7 +4,7 @@ const {analyze,toFeatures}=require('./analysis.cjs');
 const {createServer}=require('./serve.cjs');
 const Crochet=require('./pattern.js');
 const image='data:image/jpeg;base64,/9j/2Q=='; // transport validation fixture only; not an actual model test
-const good={supported:true,reason:'고양이형 캐릭터',body:'#ffffff',accent:'#7fa6bc',ear:'pointed',tail:'yes',notes:'머리 위 무늬는 생략합니다.'};
+const good={supported:true,reason:'고양이형 캐릭터',body:'#ffffff',accent:'#7fa6bc',head_patch:true,head_color:'#7fa6bc',head_boundary:'notched',ear:'pointed',tail:'yes',notes:'이마 중앙에서 몸 색이 머리 위 색 영역으로 올라옵니다.'};
 async function withServer(options,run){const server=createServer(options);await new Promise(r=>server.listen(0,'127.0.0.1',r));try{await run(`http://127.0.0.1:${server.address().port}`);}finally{await new Promise(r=>server.close(r));}}
 async function main(){
   let sent;
@@ -15,6 +15,9 @@ async function main(){
   assert.equal(sent.body.store,false);
   assert.equal(sent.body.input[1].type,'image');
   assert.equal(Crochet.validate(Crochet.generate(toFeatures(a))).ok,true);
+  assert.equal(Crochet.generate(toFeatures(a)).parts[0].rows[0].color,good.head_color);
+  assert.equal(Crochet.generate(toFeatures(a)).parts[0].rows[5].color,good.body);
+  assert.throws(()=>toFeatures({...a,head_color:'bad'}));
   assert.equal(toFeatures({...a,tail:'unknown'}).tail,false);
   assert.throws(()=>toFeatures({...a,body:'<script>'}));
   assert.throws(()=>toFeatures({...a,ear:'unknown'}));

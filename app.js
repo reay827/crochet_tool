@@ -53,6 +53,11 @@ $('image').addEventListener('change', async e => {
 });
 $('remove').addEventListener('click', () => { ++uploadVersion; clearImage(); $('image').value = ''; $('upload-error').textContent = ''; $('pattern-error').textContent = ''; $('progress').textContent = '먼저 이미지를 선택해 주세요.'; });
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function renderRow(r,i) {
+  const color=r.colorSections ? r.colorSections.map(s=>`${escapeHtml(s.colorLabel)} ${s.stitches}코`).join(' → ') : `<i class="swatch" style="background:${r.color}"></i>${escapeHtml(r.colorLabel)}<br><small>${r.color}</small>`;
+  const directions=r.colorSections ? `<ol class="color-directions">${r.colorSections.map(s=>`<li><i class="swatch" style="background:${s.color}"></i><strong>${escapeHtml(s.colorLabel)} (${s.color})</strong>: ${escapeHtml(Crochet.instruction(s))} → ${s.stitches}코</li>`).join('')}</ol>` : escapeHtml(Crochet.instruction(r));
+  return `<tr><td>${i+1}단</td><td>${color}</td><td>${directions}${r.note?`<br><strong>${escapeHtml(r.note)}</strong>`:''}</td><td>${r.stitches}코</td></tr>`;
+}
 function resetResult() { generated = false; $('result').hidden = true; $('parts').replaceChildren(); $('analysis-result').hidden = true; }
 $('analyze').addEventListener('click', async () => {
   if (working || !configured || !images.length) return;
@@ -66,15 +71,16 @@ $('analyze').addEventListener('click', async () => {
     if (!response.ok) throw new Error(data.error || '분석 요청에 실패했습니다.');
     const p = data.pattern, a = data.analysis, f = p.features, check = Crochet.validate(p);
     if (!check.ok) throw new Error('코 수 검사 실패');
-    const featureSummary = `고양이형 · ${f.ear === 'pointed' ? '뾰족한 귀' : '둥근 귀'} · 꼬리 ${a.tail === 'unknown' ? '확인 불가 · 초안에서 생략' : f.tail ? '있음' : '없음'} · 몸 ${f.body} / 귀·꼬리 ${f.accent}`;
-    const notes = [a.notes, a.tail === 'unknown' ? '꼬리가 가려져 있는지 확인할 수 없어 이번 초안에서는 생략했습니다. 뒷모습을 함께 선택하면 더 정확히 확인할 수 있습니다.' : ''].filter(Boolean).join(' ');
+    const featureSummary = `고양이형 · ${f.ear === 'pointed' ? '뾰족한 귀' : '둥근 귀'} · 꼬리 ${a.tail === 'unknown' ? '확인 불가 · 초안에서 생략' : f.tail ? '있음' : '없음'} · 몸 ${f.body} / 귀·꼬리 ${f.accent}${f.headPatch ? ` / 머리 위 ${f.headColor}${f.headBoundary==='notched'?' · 이마 중앙이 올라오는 배색':' (1~5단)'}` : ''}`;
+    const notes = [a.notes, f.headPatch ? (f.headBoundary==='notched'?'머리 1~3단은 머리 위 색, 4~5단은 중앙에 몸 색이 올라오는 배색, 6단부터 몸 색입니다. 원본의 곡선은 두 단의 계단형 배색으로 근사합니다.':'머리 위 색상 영역은 1~5단의 둥근 덮개로 표현합니다. 원본의 굴곡진 경계와 정확히 같지는 않습니다.') : '', a.tail === 'unknown' ? '꼬리가 가려져 있는지 확인할 수 없어 이번 초안에서는 생략했습니다. 뒷모습을 함께 선택하면 더 정확히 확인할 수 있습니다.' : ''].filter(Boolean).join(' ');
     $('analysis-summary').textContent = featureSummary; $('analysis-notes').textContent = notes; $('analysis-result').hidden = false;
-    $('parts').innerHTML = p.parts.map(part => `<section class="part"><div class="part-title"><h3>${part.name} · ${part.count}개</h3><span><i class="swatch" style="background:${part.color}"></i>${part.color}</span></div><table><thead><tr><th scope="col">단</th><th scope="col">뜨기 지시</th><th scope="col">완료 코</th></tr></thead><tbody>${part.rows.map((r, i) => `<tr><td>${i + 1}단</td><td>${escapeHtml(Crochet.instruction(r))}</td><td>${r.stitches}코</td></tr>`).join('')}</tbody></table><p class="finish">${part.finish}</p></section>`).join('');
+    $('materials').textContent = `몸 색상 실 (${f.body}), 귀·꼬리 색상 실 (${f.accent})${f.headPatch ? `, 머리 위 색상 실 (${f.headColor}, 같은 색이면 함께 사용)` : ''}, 검정·분홍 자수실, 해당 실 라벨에 맞는 코바늘, 솜, 돗바늘, 가위, 단수링.`;
+    $('parts').innerHTML = p.parts.map(part => `<section class="part"><div class="part-title"><h3>${part.name} · ${part.count}개</h3><span>실 색상은 각 단에서 확인</span></div><table><thead><tr><th scope="col">단</th><th scope="col">실 색상</th><th scope="col">뜨기 지시</th><th scope="col">완료 코</th></tr></thead><tbody>${part.rows.map(renderRow).join('')}</tbody></table><p class="finish">${escapeHtml(part.finish)}</p></section>`).join('');
     $('summary').textContent = `${featureSummary} · AI 이미지 분석 기준. ${notes}`;
-    $('checks').textContent = `✓ 자동 코 수 검사 통과 · ${p.parts.length}종 부위, ${check.rounds}개 단 정의의 이전 코 사용량·완료 코 수 일치 (동일 부위 복제 전 기준)`;
+    $('checks').textContent = `✓ 자동 코 수 검사 통과 · ${p.parts.length}종 부위, ${check.rounds}개 단 정의의 이전 코 사용량·완료 코 수 일치${f.headBoundary==='notched'&&f.headPatch?' · 배색 구간 합계·뜨기 순서 일치':''} (동일 부위 복제 전 기준)`;
     const assembly = ['머리와 몸통에 솜을 넣고 마감합니다. 몸통 입구 12코를 머리 아래 15~16단 부근에 중심을 맞춰 시침하고 둘레를 꿰맵니다.', '귀 2개를 납작하게 눌러 머리 윗부분 3~6단 부근의 양쪽에 대칭으로 시침한 뒤 꿰맵니다.', '팔 2개를 몸통 양옆 10~12단 부근에, 다리 2개를 몸통 아래 앞쪽 3~5단 부근에 시침하고 꿰맵니다.'];
     if (f.tail) assembly.push('꼬리를 몸통 뒤 중심의 4~6단 부근에 시침하고 입구 둘레를 꿰매 고정합니다.');
-    assembly.push('검정 자수실로 머리 정면 9~11단 부근에 눈을 좌우 대칭으로 수놓습니다. 가운데 작은 코와 입, 분홍색 볼을 수놓습니다. 머리 위 파란 무늬는 이번 기본 도안에 포함되지 않습니다.', '모든 실 끝을 내부에 숨기고 느슨한 부착 부위가 없는지 확인합니다. 실제 형태와 부착 위치는 숙련자의 제작 검증을 받아 조정해야 합니다.');
+    assembly.push('검정 자수실로 머리 정면 9~11단 부근에 눈을 좌우 대칭으로 수놓습니다. 가운데 작은 코와 입, 분홍색 볼을 수놓습니다.', '모든 실 끝을 내부에 숨기고 느슨한 부착 부위가 없는지 확인합니다. 실제 형태와 부착 위치는 숙련자의 제작 검증을 받아 조정해야 합니다.');
     $('assembly').innerHTML = assembly.map(s => `<li>${s}</li>`).join('');
     generated = true; $('progress').textContent = '이미지 분석과 도안 생성이 완료되었습니다.'; $('result').hidden = false; $('result-title').focus(); $('result').scrollIntoView({behavior:'smooth', block:'start'});
   } catch (err) {

@@ -14,4 +14,23 @@ for (const ear of ['pointed', 'round']) for (const tail of [true, false]) {
 }
 assert.equal(validate({parts: []}).ok, false);
 assert.throws(() => generate({body:'bad', accent:'#ffffff', ear:'pointed', tail:true}));
-console.log('PASS: 4 feature combinations; output/consumption corruption rejected; invalid input rejected.');
+const base={body:'#ffffff',accent:'#7fa6bc',ear:'pointed',tail:true};
+const cap=generate({...base,headPatch:true,headColor:'#7399b7'});
+const plain=generate({...base,headPatch:false});
+assert.equal(validate(cap).ok,true);
+assert.deepEqual(cap.parts[0].rows.map(r=>r.stitches),plain.parts[0].rows.map(r=>r.stitches));
+assert.equal(cap.parts[0].rows.slice(0,5).every(r=>r.color==='#7399b7'),true);
+assert.equal(cap.parts[0].rows.slice(5).every(r=>r.color==='#ffffff'),true);
+assert.match(cap.parts[0].rows[4].note,/6단/);
+assert.equal(plain.parts[0].rows.every(r=>r.color==='#ffffff'),true);
+assert.throws(()=>generate({...base,headPatch:true,headColor:'bad'}));
+const notch=generate({...base,headPatch:true,headColor:'#7399b7',headBoundary:'notched'});
+assert.equal(validate(notch).ok,true);
+assert.deepEqual(notch.parts[0].rows[3].colorSections.map(s=>s.stitches),[10,4,10]);
+assert.deepEqual(notch.parts[0].rows[4].colorSections.map(s=>s.stitches),[10,10,10]);
+assert.deepEqual(notch.parts[0].rows.map(r=>r.stitches),plain.parts[0].rows.map(r=>r.stitches));
+const brokenColor=structuredClone(notch);brokenColor.parts[0].rows[3].colorSections[1].stitches++;
+assert.equal(validate(brokenColor).ok,false);
+const brokenOrder=structuredClone(notch);brokenOrder.parts[0].rows[3].colorSections[1].ops.reverse();
+assert.equal(validate(brokenOrder).ok,false);
+console.log('PASS: 4 feature combinations; output/consumption corruption rejected; head color transition and unchanged stitch counts verified; invalid input rejected.');
