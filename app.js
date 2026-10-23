@@ -58,9 +58,9 @@ $('analyze').addEventListener('click', async () => {
   if (working || !configured || !images.length) return;
   const version = uploadVersion;
   working = true; updateButton(); resetResult(); $('pattern-error').textContent = '';
-  $('progress').textContent = '이미지를 분석하고 코 수를 검사하고 있습니다…';
+  $('progress').textContent = '이미지를 분석하고 코 수를 검사하고 있습니다… 응답에 최대 2분이 걸릴 수 있습니다.';
   try {
-    const response = await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({images}),signal:AbortSignal.timeout(55000)});
+    const response = await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({images}),signal:AbortSignal.timeout(130000)});
     const data = await response.json();
     if (version !== uploadVersion) return;
     if (!response.ok) throw new Error(data.error || '분석 요청에 실패했습니다.');
