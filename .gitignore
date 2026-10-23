@@ -1,0 +1,23 @@
+# 비밀키와 컴퓨터별 설정
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 설치 파일과 생성 결과
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# 개인 이미지·작업 중 파일 (앱용 공개 샘플은 별도 관리)
+private/
+uploads/
+
+# 운영체제와 편집기 설정
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
