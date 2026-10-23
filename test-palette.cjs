@@ -12,4 +12,6 @@ const near=Palette.create({body:'#FFFFFF',accent:'#739AC5',headPatch:true,headCo
 const white=Palette.create({body:'#FFFFFF',accent:'#f8f8f8',headPatch:false});assert.equal(white.entries.length,1);
 assert.throws(()=>Palette.create({body:'bad',accent:'#739ac5'}));
 const earless=Palette.create({body:'#FFFFFF',accent:'#739AC5',ear:'none',tail:false,hasRear:false,headPatch:false});assert.equal(earless.entries.length,1);
+const parts=Palette.create({body:'#FFFFFF',ear:'pointed',earColor:'#77AADD',tailColor:'#996633',headPatch:true,headColor:'#77AADD',tail:true,hasRear:true});
+assert.equal(parts.entries.length,3);assert.equal(parts.label('#77AADD'),'B');assert.equal(parts.label('#996633'),'C');
 console.log('PASS: A/B-only labels, unused-part colors excluded, near-color deduplication, distinct colors preserved.');

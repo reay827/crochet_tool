@@ -10,19 +10,21 @@
   function generate(f) {
     if (!f || !['pointed','round','long','none'].includes(f.ear) || typeof f.tail !== 'boolean' || !/^#[0-9a-f]{6}$/i.test(f.body) || !/^#[0-9a-f]{6}$/i.test(f.accent)) throw new Error('색상과 귀·꼬리 항목을 다시 확인해 주세요.');
     const includeTail=f.hasRear===true&&f.tail;
+    const earColor=f.earColor||f.accent,tailColor=f.tailColor||f.accent;
+    if(![earColor,tailColor].every(c=>/^#[0-9a-f]{6}$/i.test(c)))throw new Error('귀와 꼬리 실 색상을 확인해 주세요.');
     if (f.headPatch !== undefined && typeof f.headPatch !== 'boolean') throw new Error('머리 위 색상 영역을 확인해 주세요.');
     if (f.headPatch && !/^#[0-9a-f]{6}$/i.test(f.headColor)) throw new Error('머리 위 실 색상을 확인해 주세요.');
     if (f.headBoundary !== undefined && !['level','notched'].includes(f.headBoundary)) throw new Error('머리 배색 경계를 확인해 주세요.');
     const parts = [
       { name: '머리', count: 1, color: f.body, rows: [magic(6), inc(0), inc(1), inc(2), inc(3), inc(4), ...Array.from({length: 6}, () => sc(36)), dec(4), dec(3), dec(2), dec(1), dec(0)], finish: '14단부터 솜을 조금씩 넣습니다. 17단 후 남은 6코 앞고리를 실로 모아 닫고 실 끝을 숨깁니다.' },
       { name: '몸통', count: 1, color: f.body, rows: [magic(6), inc(0), inc(1), inc(2), inc(3), ...Array.from({length: 5}, () => sc(30)), dec(3), dec(2), dec(1)], finish: '11단부터 솜을 넣습니다. 입구 12코는 닫지 않고 머리에 꿰맬 긴 실을 남깁니다.' },
-      { name: '귀', count: 2, color: f.accent, rows: f.ear === 'pointed' ? [magic(4), row([op('sc'), op('inc')], 2, 6), row([op('sc'), op('inc')], 3, 9), sc(9)] : [magic(6), inc(0), sc(12), sc(12)], finish: '솜 없이 납작하게 누릅니다. 입구를 꿰맬 긴 실을 남기고 마감합니다.' },
+      { name: '귀', count: 2, color: earColor, rows: f.ear === 'pointed' ? [magic(4), row([op('sc'), op('inc')], 2, 6), row([op('sc'), op('inc')], 3, 9), sc(9)] : [magic(6), inc(0), sc(12), sc(12)], finish: '솜 없이 납작하게 누릅니다. 입구를 꿰맬 긴 실을 남기고 마감합니다.' },
       { name: '팔', count: 2, color: f.body, rows: [magic(6), sc(6), sc(6), sc(6)], finish: '솜은 생략하거나 끝에만 소량 넣습니다. 입구를 납작하게 눌러 꿰맬 실을 남깁니다.' },
       { name: '다리', count: 2, color: f.body, rows: [magic(6), row([op('sc'), op('inc')], 3, 9), sc(9), sc(9)], finish: '소량의 솜을 넣습니다. 입구를 닫지 않고 부착할 실을 남깁니다.' }
     ];
     if(f.ear==='none')parts.splice(parts.findIndex(p=>p.name==='귀'),1);
     if(f.ear==='long')parts.find(p=>p.name==='귀').rows=[magic(6),row([op('sc'),op('inc')],3,9),...Array.from({length:7},()=>sc(9))];
-    if (includeTail) parts.push({ name: '꼬리', count: 1, color: f.accent, rows: [magic(6), ...Array.from({length: 4}, () => sc(6))], finish: '솜은 소량만 넣고 입구를 닫지 않은 채 부착할 실을 남깁니다. 후면에서 확인한 꼬리를 짧고 둥근 형태로 단순화한 초안입니다.' });
+    if (includeTail) parts.push({ name: '꼬리', count: 1, color: tailColor, rows: [magic(6), ...Array.from({length: 4}, () => sc(6))], finish: '솜은 소량만 넣고 입구를 닫지 않은 채 부착할 실을 남깁니다. 후면에서 확인한 꼬리를 짧고 둥근 형태로 단순화한 초안입니다.' });
     for (const part of parts) part.rows.forEach(r => {r.color=part.color;r.colorLabel=['귀','꼬리'].includes(part.name)?'귀·꼬리 색':'몸 색';});
     if (f.headPatch) {
       const head=parts[0];

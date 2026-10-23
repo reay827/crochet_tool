@@ -72,8 +72,7 @@ $('analyze').addEventListener('click', async () => {
     currentFeatures=f;yarnPalette=YarnPalette.create(f);
     const earName={pointed:'뾰족한 귀',round:'둥근 귀',long:'긴 귀',none:'귀 없음'}[f.ear];
     const tailNote=!f.hasRear?'뒷면 없음 · 꼬리 생성 안 함':f.tail?'꼬리 있음 · 후면에서 확인':a.tail==='unknown'?'후면에서 꼬리 확인 불가 · 생략':'꼬리 없음';
-    const accentUse=[...(f.ear!=='none'?['귀']:[]),...(f.tail?['꼬리']:[])].join('·');
-    const featureSummary = `${f.name||'캐릭터'} · ${earName} · ${tailNote} · 몸 ${yarnPalette.label(f.body)}${accentUse?` / ${accentUse} ${yarnPalette.label(f.accent)}`:''}${f.headPatch ? ` / 머리 위 ${yarnPalette.label(f.headColor)}${f.headBoundary==='notched'?' · 이마 중앙이 올라오는 배색':' (1~5단)'}` : ''}`;
+    const featureSummary = `${f.name||'캐릭터'} · ${earName} · ${tailNote} · 몸 ${yarnPalette.label(f.body)}${f.ear!=='none'?` / 귀 ${yarnPalette.label(f.earColor||f.accent)}`:''}${f.tail?` / 꼬리 ${yarnPalette.label(f.tailColor||f.accent)}`:''}${f.headPatch ? ` / 머리 위 ${yarnPalette.label(f.headColor)}${f.headBoundary==='notched'?' · 이마 중앙이 올라오는 배색':' (1~5단)'}` : ''}`;
     const notes = [String(a.notes).replace(/#[0-9a-f]{6}\b/gi,''), f.headPatch ? (f.headBoundary==='notched'?'머리 1~3단은 머리 위 색, 4~5단은 중앙에 몸 색이 올라오는 배색, 6단부터 몸 색입니다. 원본의 곡선은 두 단의 계단형 배색으로 근사합니다.':'머리 위 색상 영역은 1~5단의 둥근 덮개로 표현합니다. 원본의 굴곡진 경계와 정확히 같지는 않습니다.') : '', !f.hasRear?'뒷면 이미지가 없으므로 정면에 꼬리가 보이더라도 꼬리는 생성하지 않았습니다.':a.tail==='unknown'?'뒷면에서 꼬리를 확실히 확인할 수 없어 생략했습니다.':''].filter(Boolean).join(' ');
     $('analysis-summary').textContent = featureSummary; $('analysis-notes').textContent = colorWords(notes); $('analysis-result').hidden = false;
     $('result-title').textContent=`${f.name||'캐릭터'} 인형 초안`;

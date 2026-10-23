@@ -4,7 +4,7 @@ const {analyze,toFeatures}=require('./analysis.cjs');
 const {createServer}=require('./serve.cjs');
 const Crochet=require('./pattern.js');
 const image='data:image/jpeg;base64,/9j/2Q=='; // transport validation fixture only; not an actual model test
-const good={supported:true,name:'작은 캐릭터',front_valid:true,back_valid:true,same_character:true,reason:'단순 캐릭터',body:'#ffffff',accent:'#7fa6bc',head_patch:true,head_color:'#7fa6bc',head_boundary:'notched',ear:'pointed',tail:'yes',notes:'이마 중앙에서 몸 색이 머리 위 색 영역으로 올라옵니다.'};
+const good={supported:true,name:'작은 캐릭터',front_valid:true,back_valid:true,same_character:true,reason:'단순 캐릭터',body:'#ffffff',ear_color:'#7fa6bc',tail_color:'#7fa6bc',head_patch:true,head_color:'#7fa6bc',head_boundary:'notched',ear:'pointed',tail:'yes',notes:'이마 중앙에서 몸 색이 머리 위 색 영역으로 올라옵니다.'};
 async function withServer(options,run){const server=createServer(options);await new Promise(r=>server.listen(0,'127.0.0.1',r));try{await run(`http://127.0.0.1:${server.address().port}`);}finally{await new Promise(r=>server.close(r));}}
 async function main(){
   let sent;
@@ -24,6 +24,10 @@ async function main(){
   assert.throws(()=>toFeatures({...a,ear:'unknown'}));
   assert.equal(toFeatures(a).tail,false,'no rear must suppress tail even when AI says yes');
   assert.equal(toFeatures(a,true).tail,true);
+  const separate=toFeatures({...a,ear_color:'#77AADD',tail_color:'#996633'},true);
+  const separatePattern=Crochet.generate(separate);
+  assert.equal(separatePattern.parts.find(p=>p.name==='귀').color,'#77AADD');
+  assert.equal(separatePattern.parts.find(p=>p.name==='꼬리').color,'#996633');
   assert.throws(()=>toFeatures({...a,front_valid:false}),/정면/);
   assert.throws(()=>toFeatures({...a,back_valid:false},true),/뒷면/);
   assert.throws(()=>toFeatures({...a,same_character:false},true),/같은 캐릭터/);
