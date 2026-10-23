@@ -6,7 +6,7 @@ const Crochet = require('./pattern.js');
 if (fs.existsSync(path.join(__dirname,'.env'))) process.loadEnvFile(path.join(__dirname,'.env'));
 const files = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/pattern.js':'pattern.js','/style.css':'style.css'};
 const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};
-function createServer({apiKey=process.env.GEMINI_API_KEY,freeTierConfirmed=process.env.GEMINI_FREE_TIER_CONFIRMED==='yes',model='gemini-2.5-flash',analyzeImpl=analyze}={}) {
+function createServer({apiKey=process.env.GEMINI_API_KEY,freeTierConfirmed=process.env.GEMINI_FREE_TIER_CONFIRMED==='yes',model='gemini-3.8-flash',analyzeImpl=analyze}={}) {
   let busy=false,calls=0;
   const send=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
   return http.createServer(async(req,res)=>{
