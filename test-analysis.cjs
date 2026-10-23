@@ -8,16 +8,20 @@ const good={supported:true,reason:'고양이형 캐릭터',body:'#ffffff',accent
 async function withServer(options,run){const server=createServer(options);await new Promise(r=>server.listen(0,'127.0.0.1',r));try{await run(`http://127.0.0.1:${server.address().port}`);}finally{await new Promise(r=>server.close(r));}}
 async function main(){
   let sent;
-  const a=await analyze([image],{apiKey:'test-not-a-real-key',fetchImpl:async(url,options)=>{sent={url,body:JSON.parse(options.body)};return {ok:true,json:async()=>({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(good)}]}}]})};}});
+  const a=await analyze([image],{apiKey:'test-not-a-real-key',fetchImpl:async(url,options)=>{sent={url,body:JSON.parse(options.body)};return {ok:true,json:async()=>({status:'completed',steps:[{type:'thought',summary:'ignored'},{type:'model_output',content:[{type:'text',text:JSON.stringify(good)}]}]})};}});
   assert.equal(sent.url.includes('generativelanguage.googleapis.com'),true);
-  assert.equal(sent.body.generationConfig.responseMimeType,'application/json');
+  assert.equal(sent.url.endsWith('/interactions'),true);
+  assert.equal(sent.body.response_format.mime_type,'application/json');
+  assert.equal(sent.body.store,false);
+  assert.equal(sent.body.input[1].type,'image');
   assert.equal(Crochet.validate(Crochet.generate(toFeatures(a))).ok,true);
   assert.equal(toFeatures({...a,tail:'unknown'}).tail,false);
   assert.throws(()=>toFeatures({...a,body:'<script>'}));
   assert.throws(()=>toFeatures({...a,ear:'unknown'}));
   await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>{throw new TypeError('fetch failed');}}),/네트워크 접근 권한/);
   await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>({ok:false,status:429})}),/무료/);
-  await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>({ok:true,json:async()=>({candidates:[{finishReason:'SAFETY'}]})})}),/끝내지/);
+  await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>({ok:false,status:503})}),/혼잡/);
+  await assert.rejects(analyze([image],{apiKey:'fake',fetchImpl:async()=>({ok:true,json:async()=>({status:'failed',steps:[]})})}),/끝내지/);
   let calls=0;
   await withServer({apiKey:'fake',freeTierConfirmed:false,analyzeImpl:async()=>{calls++;return good;}},async base=>{
     assert.equal((await (await fetch(base+'/api/status')).json()).configured,false);
