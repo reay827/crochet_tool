@@ -8,7 +8,8 @@
   const magic = n => row([op('mr', n)], 1, n);
   const expand = r => Array.from({length:r.repeat},()=>r.ops.flatMap(o=>Array(o.count).fill(o.type))).flat();
   function generate(f) {
-    if (!f || !['pointed', 'round'].includes(f.ear) || typeof f.tail !== 'boolean' || !/^#[0-9a-f]{6}$/i.test(f.body) || !/^#[0-9a-f]{6}$/i.test(f.accent)) throw new Error('색상과 귀·꼬리 항목을 다시 확인해 주세요.');
+    if (!f || !['pointed','round','long','none'].includes(f.ear) || typeof f.tail !== 'boolean' || !/^#[0-9a-f]{6}$/i.test(f.body) || !/^#[0-9a-f]{6}$/i.test(f.accent)) throw new Error('색상과 귀·꼬리 항목을 다시 확인해 주세요.');
+    const includeTail=f.hasRear===true&&f.tail;
     if (f.headPatch !== undefined && typeof f.headPatch !== 'boolean') throw new Error('머리 위 색상 영역을 확인해 주세요.');
     if (f.headPatch && !/^#[0-9a-f]{6}$/i.test(f.headColor)) throw new Error('머리 위 실 색상을 확인해 주세요.');
     if (f.headBoundary !== undefined && !['level','notched'].includes(f.headBoundary)) throw new Error('머리 배색 경계를 확인해 주세요.');
@@ -19,7 +20,9 @@
       { name: '팔', count: 2, color: f.body, rows: [magic(6), sc(6), sc(6), sc(6)], finish: '솜은 생략하거나 끝에만 소량 넣습니다. 입구를 납작하게 눌러 꿰맬 실을 남깁니다.' },
       { name: '다리', count: 2, color: f.body, rows: [magic(6), row([op('sc'), op('inc')], 3, 9), sc(9), sc(9)], finish: '소량의 솜을 넣습니다. 입구를 닫지 않고 부착할 실을 남깁니다.' }
     ];
-    if (f.tail) parts.push({ name: '꼬리', count: 1, color: f.accent, rows: [magic(6), ...Array.from({length: 4}, () => sc(6))], finish: '솜은 소량만 넣고 입구를 닫지 않은 채 부착할 실을 남깁니다. 짧고 둥근 꼬리 초안입니다.' });
+    if(f.ear==='none')parts.splice(parts.findIndex(p=>p.name==='귀'),1);
+    if(f.ear==='long')parts.find(p=>p.name==='귀').rows=[magic(6),row([op('sc'),op('inc')],3,9),...Array.from({length:7},()=>sc(9))];
+    if (includeTail) parts.push({ name: '꼬리', count: 1, color: f.accent, rows: [magic(6), ...Array.from({length: 4}, () => sc(6))], finish: '솜은 소량만 넣고 입구를 닫지 않은 채 부착할 실을 남깁니다. 후면에서 확인한 꼬리를 짧고 둥근 형태로 단순화한 초안입니다.' });
     for (const part of parts) part.rows.forEach(r => {r.color=part.color;r.colorLabel=['귀','꼬리'].includes(part.name)?'귀·꼬리 색':'몸 색';});
     if (f.headPatch) {
       const head=parts[0];
@@ -41,7 +44,7 @@
         head.finish='머리는 뒤 중심을 단 시작점으로 정합니다. 1~3단은 머리 위 색, 4~5단은 표의 순서대로 머리 위 색→몸 색→머리 위 색으로 바꿔 이마 중앙에 몸 색이 올라오는 경계를 만듭니다. 6~17단은 몸 색입니다. 몸 색 구간의 중앙을 얼굴 정면으로 하여 귀와 눈을 배치하세요. 바꾸기 직전 코의 마지막 두 고리를 다음 실로 빼고, 사용하지 않는 실은 안쪽에 여유 있게 걸칩니다. 원본의 곡선은 두 단의 계단형 배색으로 근사한 제작 검증 전 초안입니다. 14단부터 솜을 조금씩 넣습니다. 17단 후 남은 6코 앞고리를 실로 모아 닫고 실 끝을 숨깁니다.';
       }
     }
-    return { features: {...f}, parts };
+    return { features: {...f,tail:includeTail,hasRear:f.hasRear===true}, parts };
   }
   function validate(pattern) {
     const errors = [];

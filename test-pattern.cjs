@@ -1,9 +1,11 @@
 const assert = require('node:assert/strict');
 const {generate, validate} = require('./pattern.js');
-for (const ear of ['pointed', 'round']) for (const tail of [true, false]) {
-  const p = generate({body: '#f8f5ed', accent: '#7fa6bc', ear, tail});
+for (const ear of ['pointed','round','long','none']) for (const tail of [true,false]) {
+  const p = generate({body: '#f8f5ed', accent: '#7fa6bc', ear, tail,hasRear:true});
   assert.equal(validate(p).ok, true);
   assert.equal(p.parts.some(x => x.name === '꼬리'), tail);
+  assert.equal(p.parts.some(x=>x.name==='귀'),ear!=='none');
+  if(ear==='long')assert.equal(p.parts.find(x=>x.name==='귀').rows.length,9);
   const broken = structuredClone(p);
   broken.parts[0].rows[1].stitches++;
   assert.equal(validate(broken).ok, false, 'reject wrong output count');
@@ -14,7 +16,7 @@ for (const ear of ['pointed', 'round']) for (const tail of [true, false]) {
 }
 assert.equal(validate({parts: []}).ok, false);
 assert.throws(() => generate({body:'bad', accent:'#ffffff', ear:'pointed', tail:true}));
-const base={body:'#ffffff',accent:'#7fa6bc',ear:'pointed',tail:true};
+const base={body:'#ffffff',accent:'#7fa6bc',ear:'pointed',tail:true,hasRear:true};
 const cap=generate({...base,headPatch:true,headColor:'#7399b7'});
 const plain=generate({...base,headPatch:false});
 assert.equal(validate(cap).ok,true);
@@ -33,4 +35,5 @@ const brokenColor=structuredClone(notch);brokenColor.parts[0].rows[3].colorSecti
 assert.equal(validate(brokenColor).ok,false);
 const brokenOrder=structuredClone(notch);brokenOrder.parts[0].rows[3].colorSections[1].ops.reverse();
 assert.equal(validate(brokenOrder).ok,false);
-console.log('PASS: 4 feature combinations; output/consumption corruption rejected; head color transition and unchanged stitch counts verified; invalid input rejected.');
+assert.equal(generate({...base,hasRear:false}).parts.some(x=>x.name==='꼬리'),false);
+console.log('PASS: 8 ear/tail combinations; no-rear tail suppression; stitch and color validation; invalid input rejected.');

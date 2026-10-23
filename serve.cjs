@@ -23,10 +23,11 @@ function createServer({apiKey=process.env.GEMINI_API_KEY,freeTierConfirmed=proce
       let bytes=0;const chunks=[];
       for await(const chunk of req) {bytes+=chunk.length;if(bytes>13*1024*1024){send(res,413,{error:'이미지가 너무 큽니다. 더 작은 파일로 다시 시도해 주세요.'});return;}chunks.push(chunk);}
       let body;try{body=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{send(res,400,{error:'요청을 읽지 못했습니다. 이미지를 다시 선택해 주세요.'});return;}
-      validateImages(body.images);calls++;
+      try{validateImages(body.images);}catch(err){send(res,400,{error:err.message});return;}calls++;
       const analysis=await analyzeImpl(body.images,{apiKey,model});
-      if (!analysis.supported || analysis.ear==='unknown') {send(res,422,{error:analysis.supported?'귀가 잘 보이는 이미지로 다시 시도해 주세요.':(analysis.reason||'고양이형 캐릭터 이미지를 선택해 주세요.')});return;}
-      const pattern=Crochet.generate(toFeatures(analysis)),check=Crochet.validate(pattern);
+      let features;
+      try{features=toFeatures(analysis,Boolean(body.images.back));}catch(err){send(res,422,{error:err.message});return;}
+      const pattern=Crochet.generate(features),check=Crochet.validate(pattern);
       if (!check.ok) {send(res,500,{error:'자동 코 수 검사에 실패해 도안을 표시하지 않았습니다. 개발자 확인이 필요합니다.'});return;}
       send(res,200,{analysis,pattern,check});
     }catch(err){send(res,502,{error:err.name==='TimeoutError'?'분석 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.':err.message});}finally{busy=false;}
